@@ -45,11 +45,15 @@ blogRoutes.put("/:id", async (req, res) => {
   const body = req.body;
   const { id } = req.params;
 
+  const blogBefore = await Blog.findById(id);
+  if (!blogBefore) {
+    return res.status(404).json({ error: "No blog found" });
+  }
   const blog = {
     title: body.title,
     author: body.author,
     url: body.url,
-    likes: body.likes,
+    likes: blogBefore.likes + 1,
   };
   const updatedBlog = await Blog.findByIdAndUpdate(id, blog, {
     new: true,
