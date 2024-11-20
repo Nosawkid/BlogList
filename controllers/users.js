@@ -12,6 +12,21 @@ userRouter.get("/", async (req, res) => {
   res.json(users);
 });
 
+userRouter.get("/:id", async (req, res) => {
+  const { id } = req.params;
+  const user = await User.findById(id).populate("blogs", {
+    title: 1,
+    url: 1,
+    likes: 1,
+  });
+
+  if (!user) {
+    return res.status(404).json({ error: "User not found" });
+  }
+
+  res.status(200).json(user);
+});
+
 // Registration endpoint
 userRouter.post("/", async (req, res) => {
   const { username, name, password } = req.body;

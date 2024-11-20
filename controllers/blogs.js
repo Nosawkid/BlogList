@@ -1,12 +1,20 @@
 const blogRoutes = require("express").Router();
 const Blog = require("../models/blog");
-const User = require("../models/user");
-const jwt = require("jsonwebtoken");
+const Comment = require("../models/comment");
 const { userExtractor } = require("../utils/middleware");
 
 blogRoutes.get("/", async (req, res) => {
   const blogs = await Blog.find({}).populate("user", { username: 1, name: 1 });
   res.json(blogs);
+});
+
+blogRoutes.get("/:id", async (req, res) => {
+  const { id } = req.params;
+  const blog = await Blog.findById(id).populate("user", {
+    username: 1,
+    name: 1,
+  });
+  res.json(blog);
 });
 
 blogRoutes.post("/", userExtractor, async (req, res) => {
@@ -62,6 +70,29 @@ blogRoutes.put("/:id", async (req, res) => {
   });
 
   res.json(updatedBlog);
+});
+
+blogRoutes.post("/:id/comments", userExtractor, async (req, res) => {
+  console.log(req.body);
+  const { comment, user } = req.body;
+  const { id } = req.params;
+  const blog = await Blog.findById(id);
+  if (!comment || !user) {
+    return res.status(400).json({ error: "Invalid Comment" });
+  }
+  const newComment = new Comment({
+    comment,
+    blog: blog._id,
+    user,
+  });
+  await newComment.save();
+  res.status(201).json(newComment);
+});
+
+blogRoutes.get("/:id/comments", userExtractor, async (req, res) => {
+  const { id } = req.params;
+  const comments = await Comment.find({ blog: id });
+  res.json(comments);
 });
 
 module.exports = blogRoutes;
